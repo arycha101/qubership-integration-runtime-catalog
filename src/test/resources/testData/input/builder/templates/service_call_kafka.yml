@@ -13,7 +13,7 @@ elements:
       after: []
       before:
         type: "script"
-        script: "exchange.getMessage().setBody(\"testRequestBody\")"
+        script: 'exchange.getMessage().setBody("testRequestBody")'
       retryCount: "2"
       retryDelay: "5000"
       systemType: "INTERNAL"

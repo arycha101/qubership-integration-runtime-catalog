@@ -8,14 +8,14 @@ server:
 spring:
   autoconfigure:
     exclude:
-    - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
-    - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
-    - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
-    - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
-    - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
-    - org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
-    - org.springframework.boot.actuate.autoconfigure.jdbc.DataSourceHealthContributorAutoConfiguration
-    - org.springframework.boot.actuate.autoconfigure.metrics.jdbc.DataSourcePoolMetricsAutoConfiguration
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.jdbc.DataSourceHealthContributorAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.jdbc.DataSourcePoolMetricsAutoConfiguration
   main:
     allow-bean-definition-overriding: true
   profiles:
@@ -65,8 +65,8 @@ db:
       default-schema: ${spring.jpa.properties.hibernate.default_schema}
       create-schemas: true
       outOfOrder: true
-      locations: 'classpath:db/migration/postgresql/configs'
-      ignoreMigrationPatterns: ''
+      locations: "classpath:db/migration/postgresql/configs"
+      ignoreMigrationPatterns: ""
   hikari:
     datasources:
       datasource:
@@ -144,7 +144,7 @@ qip:
       protocol: http
       url: egress-gateway:8080
   engine:
-    app-check-custom-label: qip_engine_app  #need this label for domains resolution. Each new domain can have a fully custom deployment name
+    app-check-custom-label: qip_engine_app #need this label for domains resolution. Each new domain can have a fully custom deployment name
   control-plane:
     chain-routes-registration:
       ingress-gateways: ${QIP_REGISTER_INGRESS_CHAIN_ROUTES:true} # public/private/internal gateway

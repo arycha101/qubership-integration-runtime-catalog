@@ -13,7 +13,7 @@ elements:
         element-type: "if"
         original-id: "a557cd0a-504f-42d2-adb2-de0393d89614"
         properties:
-          condition: "${exchangeProperty.test} == \"true\""
+          condition: '${exchangeProperty.test} == "true"'
       - id: "bb82763f-8319-4bf9-a093-c00135abb84c"
         name: "Else"
         element-type: "else"

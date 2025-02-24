@@ -13,7 +13,7 @@ elements:
           code: "200"
           type: "script"
           label: "200"
-          script: "exchange.setProperty(\"responseBody\", exchange.getMessage().getBody(String.class))"
+          script: 'exchange.setProperty("responseBody", exchange.getMessage().getBody(String.class))'
           wildcard: false
         - id: "400..499"
           code: "400..499"
