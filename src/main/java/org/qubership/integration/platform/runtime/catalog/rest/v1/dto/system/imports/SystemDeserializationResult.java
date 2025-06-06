@@ -19,6 +19,7 @@ package org.qubership.integration.platform.runtime.catalog.rest.v1.dto.system.im
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.qubership.integration.platform.catalog.persistence.configs.entity.context.ContextSystem;
 import org.qubership.integration.platform.catalog.persistence.configs.entity.system.IntegrationSystem;
 
 @NoArgsConstructor
@@ -26,4 +27,5 @@ import org.qubership.integration.platform.catalog.persistence.configs.entity.sys
 @Setter
 public class SystemDeserializationResult {
     private IntegrationSystem system;
+    private ContextSystem contextSystem;
 }

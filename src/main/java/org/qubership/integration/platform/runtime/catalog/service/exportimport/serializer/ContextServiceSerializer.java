@@ -1,0 +1,72 @@
+package org.qubership.integration.platform.runtime.catalog.service.exportimport.serializer;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import org.qubership.integration.platform.catalog.persistence.configs.entity.context.ContextSystem;
+import org.qubership.integration.platform.catalog.persistence.configs.entity.system.*;
+import org.qubership.integration.platform.catalog.service.exportimport.ExportImportUtils;
+import org.qubership.integration.platform.runtime.catalog.model.system.exportimport.*;
+import org.qubership.integration.platform.runtime.catalog.service.exportimport.migrations.ImportFileMigration;
+import org.qubership.integration.platform.runtime.catalog.service.exportimport.migrations.chain.ImportFileMigrationUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipOutputStream;
+
+import static org.qubership.integration.platform.catalog.service.exportimport.ExportImportConstants.ARCH_PARENT_DIR;
+import static org.qubership.integration.platform.catalog.service.exportimport.ExportImportConstants.SPECIFICATION_SOURCE_FILE_NAME;
+
+@Component
+public class ContextServiceSerializer {
+
+    private final YAMLMapper yamlMapper;
+    private final ExportableObjectWriterVisitor exportableObjectWriterVisitor;
+
+    @Autowired
+    public ContextServiceSerializer(YAMLMapper yamlExportImportMapper,
+                             ExportableObjectWriterVisitor exportableObjectWriterVisitor) {
+        this.yamlMapper = yamlExportImportMapper;
+        this.exportableObjectWriterVisitor = exportableObjectWriterVisitor;
+    }
+
+    public ExportedSystemObject serialize(ContextSystem system) throws JsonProcessingException {
+        ObjectNode systemNode = yamlMapper.valueToTree(system);
+
+        List<ExportedSpecificationGroup> exportedSpecificationGroups = new ArrayList<>();
+
+        provideFileAdditionalData(systemNode);
+
+        return new ExportedIntegrationSystem(system.getId(), systemNode, exportedSpecificationGroups);
+    }
+
+
+    public byte[] writeSerializedArchive(List<ExportedSystemObject> exportedSystems) {
+        try (ByteArrayOutputStream fos = new ByteArrayOutputStream()) {
+            try (ZipOutputStream zipOut = new ZipOutputStream(fos)) {
+                for (ExportedSystemObject exportedSystem : exportedSystems) {
+                    String entryPath = ARCH_PARENT_DIR + File.separator + exportedSystem.getId() + File.separator;
+                    exportedSystem.accept(exportableObjectWriterVisitor, zipOut, entryPath);
+                }
+            }
+            return fos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Unknown exception while archive creation: " + e.getMessage(), e);
+        }
+    }
+
+    private void provideFileAdditionalData(ObjectNode serviceNode) {
+        serviceNode.put(
+                ImportFileMigration.IMPORT_MIGRATIONS_FIELD,
+                ImportFileMigrationUtils.getActualServiceFileMigrationVersions().stream()
+                        .sorted()
+                        .toList()
+                        .toString());
+    }
+}
