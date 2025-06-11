@@ -27,7 +27,6 @@ import org.qubership.integration.platform.runtime.catalog.rest.v1.dto.system.imp
 import org.qubership.integration.platform.runtime.catalog.rest.v1.exception.exceptions.ServicesNotFoundException;
 import org.qubership.integration.platform.runtime.catalog.rest.v3.dto.exportimport.ImportMode;
 import org.qubership.integration.platform.runtime.catalog.rest.v3.dto.exportimport.system.SystemsCommitRequest;
-import org.qubership.integration.platform.runtime.catalog.service.EnvironmentService;
 import org.qubership.integration.platform.runtime.catalog.service.SystemModelService;
 import org.qubership.integration.platform.runtime.catalog.service.SystemService;
 import org.qubership.integration.platform.runtime.catalog.service.exportimport.deserializer.ContextServiceDeserializer;
@@ -48,9 +47,7 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.function.Consumer;
-
 import java.util.stream.Collectors;
-
 
 import static org.qubership.integration.platform.catalog.service.exportimport.ExportImportConstants.ZIP_EXTENSION;
 import static org.qubership.integration.platform.catalog.service.exportimport.ExportImportUtils.*;
