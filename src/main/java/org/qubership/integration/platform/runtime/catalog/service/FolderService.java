@@ -16,7 +16,13 @@
 
 package org.qubership.integration.platform.runtime.catalog.service;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import org.codehaus.plexus.util.StringUtils;
 import org.qubership.integration.platform.runtime.catalog.exception.exceptions.FolderMoveException;
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.entity.actionlog.ActionLog;
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.entity.actionlog.EntityType;
@@ -28,6 +34,8 @@ import org.qubership.integration.platform.runtime.catalog.persistence.configs.re
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.repository.chain.FolderRepository;
 import org.qubership.integration.platform.runtime.catalog.rest.v1.dto.chain.ChainSearchRequestDTO;
 import org.qubership.integration.platform.runtime.catalog.rest.v1.dto.folder.FolderContentFilter;
+import org.qubership.integration.platform.runtime.catalog.rest.v2.dto.ListFolderRequest;
+import org.qubership.integration.platform.runtime.catalog.service.filter.ChainFilterSpecificationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Service
@@ -51,17 +60,24 @@ public class FolderService {
 
     private final AuditingHandler auditingHandler;
 
+    private final EntityManager entityManager;
+    private final ChainFilterSpecificationBuilder chainFilterSpecificationBuilder;
+
     @Autowired
     public FolderService(FolderRepository folderRepository,
                          ActionsLogService actionLogger,
                          ChainRepository chainRepository,
                          DeploymentService deploymentService,
-                         AuditingHandler jpaAuditingHandler) {
+                         AuditingHandler jpaAuditingHandler,
+                         EntityManager entityManager,
+                         ChainFilterSpecificationBuilder chainFilterSpecificationBuilder) {
         this.folderRepository = folderRepository;
         this.actionLogger = actionLogger;
         this.chainRepository = chainRepository;
         this.deploymentService = deploymentService;
         this.auditingHandler = jpaAuditingHandler;
+        this.entityManager = entityManager;
+        this.chainFilterSpecificationBuilder = chainFilterSpecificationBuilder;
     }
 
     public List<Folder> findAllInRoot() {
@@ -136,7 +152,72 @@ public class FolderService {
     }
 
     public List<Folder> searchFolders(ChainSearchRequestDTO searchRequest) {
-        return folderRepository.findByNameContaining(searchRequest.getSearchCondition());
+        return searchFolders(searchRequest.getSearchCondition());
+    }
+
+    public List<Folder> searchFolders(String searchString) {
+        return folderRepository.findByNameContaining(searchString);
+    }
+
+    public List<Folder> findByRequest(ListFolderRequest request) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Folder> query = criteriaBuilder.createQuery(Folder.class);
+        Root<Folder> root = query.from(Folder.class);
+
+        Specification<Folder> folderSpecification = (r, q, cb) ->
+                isNull(request.getFolderId())
+                        ? cb.isNull(r.get("parentFolder").get("id"))
+                        : cb.equal(r.get("parentFolder").get("id"), cb.literal(request.getFolderId()));
+
+        Specification<Folder> searchSpecification = null;
+
+        if (StringUtils.isNotBlank(request.getSearchString())) {
+            searchSpecification = (r, q, cb) -> cb.or(
+                    cb.like(cb.lower(r.get("name")), cb.literal("%" + request.getSearchString().toLowerCase() + "%")),
+                    cb.like(cb.lower(r.get("description")), cb.literal("%" + request.getSearchString().toLowerCase() + "%"))
+            );
+        }
+
+        if (!request.getFilters().isEmpty() || StringUtils.isNotBlank(request.getSearchString())) {
+            Subquery<Boolean> subquery = query.subquery(Boolean.class);
+            Root<Chain> chainRoot = subquery.from(Chain.class);
+            subquery.select(criteriaBuilder.greaterThan(
+                    criteriaBuilder.count(chainRoot.get("id")),
+                    criteriaBuilder.literal(0L)));
+
+            Specification<Chain> chainSpecification = (r, q, cb) ->
+                    cb.isTrue(cb.function("is_parent_folder", Boolean.class, root.get("id"), chainRoot.get("parentFolder").get("id")));
+            if (StringUtils.isNotBlank(request.getSearchString())) {
+                chainSpecification = chainSpecification.and(chainFilterSpecificationBuilder.buildSearch(request.getSearchString()));
+            }
+            if (!request.getFilters().isEmpty()) {
+                chainSpecification = chainSpecification.and(chainFilterSpecificationBuilder.buildFilter(request.getFilters()));
+            }
+            subquery.where(chainSpecification.toPredicate(chainRoot, query, criteriaBuilder));
+
+            Specification<Folder> spec = (r, q, cb) -> cb.isTrue(subquery);
+            if (isNull(searchSpecification)) {
+                searchSpecification = spec;
+            } else {
+                searchSpecification = searchSpecification.or(spec);
+            }
+        }
+
+        if (nonNull(searchSpecification)) {
+            folderSpecification = folderSpecification.and(searchSpecification);
+        }
+
+        query.where(folderSpecification.toPredicate(root, query, criteriaBuilder));
+        return entityManager.createQuery(query).getResultList();
+    }
+
+    public List<Folder> getPathToFolder(String folderId) {
+        if (isNull(folderId)) {
+            return Collections.emptyList();
+        }
+        List<Folder> path = folderRepository.getPath(folderId);
+        Collections.reverse(path);
+        return path;
     }
 
     public List<Folder> getFoldersHierarchically(List<? extends FoldableEntity> relatedChains) {
@@ -168,6 +249,25 @@ public class FolderService {
                         .build());
             }
         }
+    }
+
+    public void deleteByIds(List<String> folderIds) {
+        List<Chain> chains = chainRepository.findAllChainsInFolders(folderIds);
+        chains.forEach(FoldableEntity::getParentFolder); // To ensure that parent folders are loaded.
+        chains.stream().map(Chain::getId).toList().forEach(deploymentService::deleteAllByChainId);
+        folderRepository.deleteFolderTree(folderIds);
+        chains.forEach(chain -> {
+            Optional<Folder> folder = Optional.ofNullable(chain.getParentFolder());
+            actionLogger.logAction(ActionLog.builder()
+                    .entityType(EntityType.CHAIN)
+                    .entityId(chain.getId())
+                    .entityName(chain.getName())
+                    .parentType(folder.isPresent() ? EntityType.FOLDER : null)
+                    .parentId(folder.map(Folder::getId).orElse(null))
+                    .parentName(folder.map(Folder::getName).orElse(null))
+                    .operation(LogOperation.DELETE)
+                    .build());
+        });
     }
 
     private void deleteRuntimeDeployments(Folder folder) {

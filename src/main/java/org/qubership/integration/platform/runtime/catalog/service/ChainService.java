@@ -17,10 +17,9 @@
 package org.qubership.integration.platform.runtime.catalog.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.codehaus.plexus.util.StringUtils;
 import org.qubership.integration.platform.runtime.catalog.configuration.aspect.ChainModification;
 import org.qubership.integration.platform.runtime.catalog.model.dto.system.UsedSystem;
-import org.qubership.integration.platform.runtime.catalog.model.filter.FilterCondition;
-import org.qubership.integration.platform.runtime.catalog.model.filter.FilterFeature;
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.entity.AbstractEntity;
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.entity.AbstractLabel;
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.entity.actionlog.ActionLog;
@@ -35,6 +34,7 @@ import org.qubership.integration.platform.runtime.catalog.persistence.configs.en
 import org.qubership.integration.platform.runtime.catalog.persistence.configs.repository.chain.*;
 import org.qubership.integration.platform.runtime.catalog.rest.v1.dto.FilterRequestDTO;
 import org.qubership.integration.platform.runtime.catalog.rest.v1.dto.chain.ChainSearchRequestDTO;
+import org.qubership.integration.platform.runtime.catalog.rest.v2.dto.ListFolderRequest;
 import org.qubership.integration.platform.runtime.catalog.service.filter.ChainFilterSpecificationBuilder;
 import org.qubership.integration.platform.runtime.catalog.service.filter.complex.ChainStatusFilters;
 import org.qubership.integration.platform.runtime.catalog.service.filter.complex.ElementFilter;
@@ -54,8 +54,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import static java.util.Objects.isNull;
 import static org.qubership.integration.platform.runtime.catalog.service.exportimport.ExportImportConstants.OVERRIDDEN_LABEL_NAME;
 import static org.qubership.integration.platform.runtime.catalog.service.exportimport.ExportImportConstants.OVERRIDES_LABEL_NAME;
 
@@ -224,26 +224,24 @@ public class ChainService extends ChainBaseService {
                 .collect(Collectors.toMap(AbstractEntity::getId, AbstractEntity::getName));
     }
 
-    public List<Chain> searchChains(ChainSearchRequestDTO systemSearchRequestDTO) {
-        List<FilterRequestDTO> filters = Stream.of(
-                FilterFeature.ID,
-                FilterFeature.NAME,
-                FilterFeature.DESCRIPTION,
-                FilterFeature.PATH,
-                FilterFeature.METHOD,
-                FilterFeature.EXCHANGE,
-                FilterFeature.TOPIC,
-                FilterFeature.QUEUE,
-                FilterFeature.LABELS,
-                FilterFeature.CLASSIFIER
-        ).map(feature -> FilterRequestDTO
-                .builder()
-                .feature(feature)
-                .value(systemSearchRequestDTO.getSearchCondition())
-                .condition(FilterCondition.CONTAINS)
-                .build()
-        ).toList();
-        Specification<Chain> specification = chainFilterSpecificationBuilder.buildSearch(filters);
+    public List<Chain> findByRequest(ListFolderRequest request) {
+        Specification<Chain> specification = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
+        if (StringUtils.isNotBlank(request.getSearchString())) {
+            specification = specification.and(chainFilterSpecificationBuilder.buildSearch(request.getSearchString()));
+        }
+        if (!request.getFilters().isEmpty()) {
+            specification = specification.and(chainFilterSpecificationBuilder.buildFilter(request.getFilters()));
+        }
+        specification = specification.and((root, query, criteriaBuilder) ->
+                isNull(request.getFolderId())
+                        ? criteriaBuilder.isNull(root.get("parentFolder").get("id"))
+                        : criteriaBuilder.equal(root.get("parentFolder").get("id"), request.getFolderId())
+        );
+        return chainRepository.findAll(specification);
+    }
+
+    public List<Chain> searchChains(ChainSearchRequestDTO searchRequestDTO) {
+        Specification<Chain> specification = chainFilterSpecificationBuilder.buildSearch(searchRequestDTO.getSearchCondition());
         return chainRepository.findAll(specification);
     }
 
