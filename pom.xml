@@ -5,6 +5,7 @@
     <groupId>org.qubership</groupId>
     <artifactId>qip-runtime-catalog</artifactId>
     <version>${revision}</version>
+    <name>QIP Runtime Catalog</name>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -16,8 +17,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <revision>0.1.4-SNAPSHOT</revision>
-        <catalog-library.revision>0.1.3</catalog-library.revision>
+        <revision>0.2.0</revision>
+        <catalog-library.revision>0.2.0</catalog-library.revision>
 
         <!-- BOMs -->
 
@@ -928,7 +929,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>verify</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

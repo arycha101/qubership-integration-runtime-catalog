@@ -81,21 +81,12 @@ public class MapperAutoConfiguration {
     }
 
     @Bean("yamlMapper")
-    public YAMLMapper yamlMapper(ChainDeserializer chainDeserializer,
-                                 ChainElementDeserializer chainElementDeserializer) {
+    public YAMLMapper yamlMapper() {
         YAMLMapper yamlMapper = new YAMLMapper(createCustomYamlFactory());
         SimpleModule serializeModule = new SimpleModule();
         yamlMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        serializeModule.addSerializer(Chain.class, new ChainSerializer());
-        serializeModule.addSerializer(ChainElement.class, new ChainElementSerializer());
-        serializeModule.addSerializer(Dependency.class, new DependencySerializer());
-        serializeModule.addSerializer(MaskedField.class, new MaskedFieldSerializer());
-
-        serializeModule.addDeserializer(ChainDeserializationResult.class, chainDeserializer);
-        serializeModule.addDeserializer(ElementDeserializationResult.class, chainElementDeserializer);
         yamlMapper.registerModule(serializeModule);
         yamlMapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));
-
         return yamlMapper;
     }
 
