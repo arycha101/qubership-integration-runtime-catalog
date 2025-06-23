@@ -27,6 +27,7 @@ import org.qubership.integration.platform.catalog.persistence.configs.entity.cha
 import org.qubership.integration.platform.catalog.persistence.configs.repository.chain.ChainRepository;
 import org.qubership.integration.platform.catalog.service.ActionsLogService;
 import org.qubership.integration.platform.catalog.service.ChainBaseService;
+import org.qubership.integration.platform.catalog.service.ContextBaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -51,10 +52,11 @@ public class ChainService extends ChainBaseService {
     public ChainService(
             ChainRepository chainRepository,
             ElementService elementService,
+            ContextBaseService contextBaseService,
             @Lazy DeploymentService deploymentService,
             ActionsLogService actionLogger
     ) {
-        super(chainRepository, elementService);
+        super(chainRepository, elementService, contextBaseService);
         this.chainRepository = chainRepository;
         this.deploymentService = deploymentService;
         this.actionLogger = actionLogger;
