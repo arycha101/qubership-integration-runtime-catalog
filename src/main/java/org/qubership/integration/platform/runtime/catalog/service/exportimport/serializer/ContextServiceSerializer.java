@@ -19,7 +19,7 @@ package org.qubership.integration.platform.runtime.catalog.service.exportimport.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import org.qubership.integration.platform.catalog.persistence.configs.entity.context.ContextSystem;
+import org.qubership.integration.platform.runtime.catalog.persistence.configs.entity.context.ContextSystem;
 import org.qubership.integration.platform.runtime.catalog.model.system.exportimport.*;
 import org.qubership.integration.platform.runtime.catalog.service.exportimport.migrations.ImportFileMigration;
 import org.qubership.integration.platform.runtime.catalog.service.exportimport.migrations.chain.ImportFileMigrationUtils;
@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipOutputStream;
 
-import static org.qubership.integration.platform.catalog.service.exportimport.ExportImportConstants.ARCH_PARENT_DIR;
+import static org.qubership.integration.platform.runtime.catalog.service.exportimport.ExportImportConstants.ARCH_PARENT_DIR;
 
 @Component
 public class ContextServiceSerializer {
