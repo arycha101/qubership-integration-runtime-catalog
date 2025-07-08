@@ -14,15 +14,15 @@
 
 CREATE TABLE context_system
 (
-    id                      VARCHAR(255) NOT NULL
+    id                      TEXT NOT NULL
         CONSTRAINT pk_context_system
             PRIMARY KEY,
-    name                    VARCHAR(255),
-    description             VARCHAR(255),
+    name                    TEXT,
+    description             TEXT,
     created_when            TIMESTAMP,
-    modified_when           TIMESTAMP,
-    created_by_id           VARCHAR(255),
-    created_by_name         VARCHAR(255),
-    modified_by_id          VARCHAR(255),
-    modified_by_name        VARCHAR(255)
+    modified_when           TIMESTAMPTZ,
+    created_by_id           TEXT,
+    created_by_name         TEXT,
+    modified_by_id          TEXT,
+    modified_by_name        TEXT
 );
