@@ -61,7 +61,7 @@ public class ServiceDeserializer {
     private final FileMigrationService fileMigrationService;
     private final Collection<ServiceImportFileMigration> importFileMigrations;
 
-    @Value("${app.name}")
+    @Value("${app.prefix}")
     private String appName;
 
     @Autowired

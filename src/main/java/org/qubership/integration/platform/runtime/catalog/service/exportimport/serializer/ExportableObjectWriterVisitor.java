@@ -36,7 +36,7 @@ public class ExportableObjectWriterVisitor {
 
     private final YAMLMapper yamlMapper;
 
-    @Value("${app.name}")
+    @Value("${app.prefix}")
     private String appName;
 
     @Autowired

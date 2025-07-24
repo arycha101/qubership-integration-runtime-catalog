@@ -186,4 +186,4 @@ camel:
       name: 'requestFilterHeaderAllowlist'
 
 app:
-  name: qip
+  prefix: qip

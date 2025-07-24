@@ -104,7 +104,7 @@ public class ImportService {
     private static final short ASYNC_IMPORT_PERCENTAGE_THRESHOLD = 40;
     private static final short ASYNC_SNAPSHOT_BUILD_PERCENTAGE_THRESHOLD = 90;
 
-    @Value("${app.name}")
+    @Value("${app.prefix}")
     private String appName;
 
     @Autowired

@@ -94,7 +94,7 @@ public class ChainImportService {
 
     @Value("${qip.build.artifact-descriptor-version}")
     private String artifactDescriptorVersion;
-    @Value("${app.name}")
+    @Value("${app.prefix}")
     private String appName;
 
     @Autowired

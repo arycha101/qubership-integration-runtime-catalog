@@ -62,7 +62,7 @@ import static org.qubership.integration.platform.runtime.catalog.service.exporti
 @Service
 public class ExportService {
 
-    @Value("${app.name}")
+    @Value("${app.prefix}")
     private String appName;
 
     private final YAMLMapper yamlMapper;
