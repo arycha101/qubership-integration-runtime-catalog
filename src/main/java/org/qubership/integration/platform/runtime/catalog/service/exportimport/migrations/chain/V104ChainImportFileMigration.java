@@ -52,32 +52,25 @@ public class V104ChainImportFileMigration implements ChainImportFileMigration {
     }
 
     private void processElementsAction(JsonNode element) {
-
         element.path("children").forEach(this::processElementsAction);
-
         JsonNode typeNode = element.path("type");
         if (typeNode.isMissingNode() || typeNode.isNull()) {
             typeNode = element.path("element-type");
         }
-        String type = typeNode.asText(null);
-
+        String type = typeNode.asText();
         if (!"http-trigger".equals(type)) {
             return;
         }
-
         JsonNode propsNode = element.path("properties");
         if (!(propsNode instanceof ObjectNode properties)) {
             return;
         }
-
         if (!"ABAC".equals(properties.path("accessControlType").asText())) {
             return;
         }
-
         ObjectNode abacParameters = properties.has("abacParameters") && properties.get("abacParameters").isObject()
                 ? (ObjectNode) properties.get("abacParameters")
                 : yamlMapper.createObjectNode();
-
         if (!abacParameters.has("resourceType")) {
             abacParameters.put("resourceType", "CHAIN");
         }
@@ -87,13 +80,11 @@ public class V104ChainImportFileMigration implements ChainImportFileMigration {
         if (!abacParameters.has("resourceDataType")) {
             abacParameters.put("resourceDataType", "String");
         }
-
         if (properties.has("abacResource")) {
             String abacResource = properties.get("abacResource").asText();
             abacParameters.put("resourceString", abacResource);
             properties.remove("abacResource");
         }
-
         properties.set("abacParameters", abacParameters);
     }
 }
