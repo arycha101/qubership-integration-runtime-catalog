@@ -5,7 +5,7 @@ SET properties =
         'abacParameters',
         jsonb_build_object(
                 'resourceString', e.properties->'abacResource',
-                'resourceType', 'CHAIN',
+                'resourceType', 'CIP-CHAIN',
                 'operation', 'ALL',
                 'resourceDataType', 'String'
         )
