@@ -68,7 +68,7 @@ public class V104ChainImportFileMigration implements ChainImportFileMigration {
                 ? (ObjectNode) properties.get("abacParameters")
                 : yamlMapper.createObjectNode();
         if (!abacParameters.has("resourceType")) {
-            abacParameters.put("resourceType", "CHAIN");
+            abacParameters.put("resourceType", "CIP-CHAIN");
         }
         if (!abacParameters.has("operation")) {
             abacParameters.put("operation", "ALL");
