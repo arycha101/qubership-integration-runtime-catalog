@@ -18,6 +18,6 @@ package org.qubership.integration.platform.mapper;
 
 import io.atlasmap.v2.Field;
 
-public class GeneratedField extends Field {
+public class GeneratedField1 extends Field {
     private static final long serialVersionUID = 1L;
 }
